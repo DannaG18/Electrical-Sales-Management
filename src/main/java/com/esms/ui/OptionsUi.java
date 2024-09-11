@@ -5,10 +5,12 @@ import javax.swing.*;
 
 import com.esms.customer.infrastructure.adapter.CustomerAdapter;
 import com.esms.invoice.infrastructure.adapter.InvoiceUI;
+import com.esms.login.infrastructure.controller.LoginController;
 
 public class OptionsUi extends JFrame {
     private JPanel mainPanel;
     private CardLayout cardLayout;
+    private LoginController loginController;
 
     public OptionsUi() {
         ImageIcon windowIcon = new ImageIcon("src/main/resources/img/Hospital.png");
@@ -97,19 +99,19 @@ public class OptionsUi extends JFrame {
 
         JButton userRegistrationButton = createRoundedButton("User Registration");
         JButton generateInvoiceButton = createRoundedButton("Generate Invoice");
-        JButton backButton = createRoundedButton("Back");
+        JButton exitButton = createRoundedButton("Back");
 
         panel.add(userRegistrationButton);
         panel.add(generateInvoiceButton);
-        panel.add(backButton);
+        panel.add(exitButton);
 
         userRegistrationButton.addActionListener(e -> new CustomerAdapter());
         generateInvoiceButton.addActionListener(e -> new InvoiceUI());
-        backButton.addActionListener(e -> {
-            
-            // Handle back button functionality
-            // new LoginController();
-            System.out.println("Back button pressed");
+        exitButton.addActionListener(e -> {
+            this.dispose(); // Cierra la ventana actual
+            if (loginController != null) {
+                loginController.setVisible(true); // Muestra el LoginController
+            }
         });
 
         return panel;

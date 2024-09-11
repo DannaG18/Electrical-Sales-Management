@@ -1,6 +1,7 @@
 package com.esms.login.application;
 
 import com.esms.login.domain.service.LoginService;
+import java.util.Optional;
 
 public class LoginRolesUseCase {
     private final LoginService loginService;
@@ -9,7 +10,7 @@ public class LoginRolesUseCase {
         this.loginService = loginService;
     }
 
-    public boolean roles(int id) {
-        return loginService.loginRoleUser(id);
+    public Optional<String> getRoleName(int userId) {
+        return loginService.getRoleName(userId);
     }
 }

@@ -63,9 +63,16 @@ public class InvoiceUI extends JFrame {
         gbc.weighty = 0.5;
         add(tableScrollPane, gbc);
 
-        JButton exitButton = createRoundedButton("Back");
-        searchPanel.add(exitButton);
+        JButton backButton = createRoundedButton("Back");
+        searchPanel.add(backButton);
+        backButton.addActionListener(e -> {
+            this.dispose(); // Cierra la ventana actual
+            if (loginController != null) {
+                loginController.setVisible(true); // Muestra el LoginController
+            }
+        });
 
+        setVisible(true); // Asegúrate de que la ventana se muestre
     }
 
     private JButton createRoundedButton(String text) {

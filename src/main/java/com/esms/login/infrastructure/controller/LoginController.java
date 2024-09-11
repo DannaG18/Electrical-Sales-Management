@@ -22,7 +22,8 @@ import com.esms.login.application.LoginRolesUseCase;
 import com.esms.login.domain.entity.LoginUsers;
 import com.esms.login.domain.service.LoginService;
 import com.esms.login.infrastructure.repository.LoginRepository;
-import com.esms.ui.*;
+import com.esms.ui.CrudUi;
+import com.esms.ui.OptionsUi;
 
 public class LoginController extends JFrame implements ActionListener {
 
@@ -91,46 +92,50 @@ public class LoginController extends JFrame implements ActionListener {
         setVisible(true);
     }
 
-@Override
-public void actionPerformed(ActionEvent e) {
-    if (e.getSource() == loginButton) {
-        String user = usernameField.getText();
-        String pass = new String(passwordField.getPassword());
-        
-        // Servicio de autenticación y repositorio de login
-        LoginService loginService = new LoginRepository();
-        LoginAutheticationUseCase loginAutheticationUseCase = new LoginAutheticationUseCase(loginService);
-        Optional<LoginUsers> logged = loginAutheticationUseCase.login(user, pass);
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == loginButton) {
+            String user = usernameField.getText();
+            String pass = new String(passwordField.getPassword());
+            
+            // Servicio de autenticación y repositorio de login
+            LoginService loginService = new LoginRepository();
+            LoginAutheticationUseCase loginAutheticationUseCase = new LoginAutheticationUseCase(loginService);
+            Optional<LoginUsers> logged = loginAutheticationUseCase.login(user, pass);
 
-        if (logged.isPresent() && logged.get().isEnabled()) {  // Asegurarse de que el usuario está habilitado
-            LoginRolesUseCase loginRolesUseCase = new LoginRolesUseCase(loginService);
-            String roleName = loginRolesUseCase.getRoleUser(logged.get().getId());  // Método para obtener el nombre del rol
+            if (logged.isPresent() && logged.get().isEnabled()) {  // Asegurarse de que el usuario está habilitado
+                LoginRolesUseCase loginRolesUseCase = new LoginRolesUseCase(loginService);
+                Optional<String> roleNameOptional = loginRolesUseCase.getRoleName(logged.get().getId());  // Método para obtener el nombre del rol
 
-            // Cerrar la ventana actual de login
-            setVisible(false);
-            dispose();
+                roleNameOptional.ifPresentOrElse(roleName -> {
+                    // Cerrar la ventana actual de login
+                    setVisible(false);
+                    dispose();
 
-            // Redirigir según el rol del usuario
-            if ("Admin".equalsIgnoreCase(roleName)) {
-                CrudUi menu = new CrudUi();
-                menu.setResizable(false);
-                menu.setLocationRelativeTo(null);
-                menu.setVisible(true);
-            } else if ("Viewer".equalsIgnoreCase(roleName)) {
-                OptionsUi menu = new OptionsUi();
-                menu.setResizable(false);
-                menu.setLocationRelativeTo(null);
-                menu.setVisible(true);
+                    // Redirigir según el rol del usuario
+                    if ("Admin".equalsIgnoreCase(roleName)) {
+                        CrudUi menu = new CrudUi();
+                        menu.setResizable(false);
+                        menu.setLocationRelativeTo(null);
+                        menu.setVisible(true);
+                    } else if ("Viewer".equalsIgnoreCase(roleName)) {
+                        OptionsUi menu = new OptionsUi();
+                        menu.setResizable(false);
+                        menu.setLocationRelativeTo(null);
+                        menu.setVisible(true);
+                    } else {
+                        // Manejar el caso donde el rol no es válido
+                        JOptionPane.showMessageDialog(this, "Rol no reconocido.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }, () -> {
+                    // Manejar el caso donde el rol no es encontrado
+                    JOptionPane.showMessageDialog(this, "Rol no encontrado.", "Error", JOptionPane.ERROR_MESSAGE);
+                });
             } else {
-                // Manejar el caso donde el rol no es válido
-                JOptionPane.showMessageDialog(this, "Rol no reconocido.", "Error", JOptionPane.ERROR_MESSAGE);
+                // Manejar el caso donde el login falla o el usuario está deshabilitado
+                JOptionPane.showMessageDialog(this, "Invalid username, password, or account disabled.", "Login Failed", JOptionPane.ERROR_MESSAGE);
             }
-        } else {
-            // Manejar el caso donde el login falla o el usuario está deshabilitado
-            JOptionPane.showMessageDialog(this, "Invalid username, password, or account disabled.", "Login Failed", JOptionPane.ERROR_MESSAGE);
         }
     }
 }
 
-    
-}
