@@ -3,6 +3,7 @@ package com.esms.city.infrastructure.adapter;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.util.List;
 
 import com.esms.city.application.CreateCityUC;
 import com.esms.city.application.DeleteCityUC;
@@ -11,6 +12,10 @@ import com.esms.city.application.FindCityUC;
 import com.esms.city.application.UpdateCityUC;
 import com.esms.city.domain.service.CityService;
 import com.esms.city.infrastructure.repository.CityRepository;
+import com.esms.country.application.FindAllCountryUC;
+import com.esms.country.domain.entity.Country;
+import com.esms.country.domain.service.CountryService;
+import com.esms.country.infrastructure.repository.CountryRepository;
 import com.esms.ui.CrudUi;
 import com.esms.city.domain.entity.City;
 
@@ -21,9 +26,12 @@ public class CityAdapter extends JFrame {
     private final FindCityUC findCityUC;
     private final FindAllCityUC findAllCityUC;
     private final DeleteCityUC deleteCityUC;
+    private final CountryService countryService;
+    private final FindAllCountryUC findAllCountryUC;
 
     private JPanel mainPanel; // Panel principal del menú
     private CardLayout cardLayout; // Layout para cambiar entre paneles
+    private JComboBox<String> countryComboBox;
 
     private CrudUi crudUi;
 
@@ -34,6 +42,8 @@ public class CityAdapter extends JFrame {
         this.findCityUC = new FindCityUC(cityService);
         this.findAllCityUC = new FindAllCityUC(cityService);
         this.deleteCityUC = new DeleteCityUC(cityService);
+        this.countryService = new CountryRepository();
+        this.findAllCountryUC = new FindAllCountryUC(countryService);
 
         // Configuración del JFrame
         ImageIcon windowIcon = new ImageIcon("src/main/resources/img/Hospital.png"); // Cambia esto a la ruta de tu
@@ -134,7 +144,10 @@ public class CityAdapter extends JFrame {
         findAllButton.addActionListener(e -> cardLayout.show(mainPanel, "FindAll"));
         updateButton.addActionListener(e -> cardLayout.show(mainPanel, "Update"));
         deleteButton.addActionListener(e -> cardLayout.show(mainPanel, "Delete"));
-        exitButton.addActionListener(e -> { this.dispose(); crudUi.setVisible(true); }); 
+        exitButton.addActionListener(e -> {
+            this.dispose();
+            crudUi.setVisible(true);
+        });
 
         return panel;
     }
@@ -183,122 +196,132 @@ public class CityAdapter extends JFrame {
 
     private JPanel createAddPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-    
+
         JPanel formPanel = new JPanel(new GridLayout(6, 1, 10, 10));
-    
+
         JLabel idLabel = new JLabel("Enter id:");
         JTextField idField = new JTextField(10);
         JLabel nameLabel = new JLabel("Enter name:");
         JTextField nameField = new JTextField(10);
-        JLabel countryIdLabel = new JLabel("Enter Country Id:");
-        JTextField countryIdField = new JTextField(10);
+        JLabel countryIdLabel = new JLabel("Select Country:");
+
+        // Crear ComboBox dinámico para los países
+        countryComboBox = new JComboBox<>();
+        countryComboBox.addItem("Select");
+        loadCountriesIntoComboBox(); // Cargar los países al iniciar la interfaz
+
         JButton submitButton = createRoundedButton("Submit");
         JButton backButton = createRoundedButton("Back");
-    
+
         formPanel.add(idLabel);
         formPanel.add(idField);
         formPanel.add(nameLabel);
         formPanel.add(nameField);
         formPanel.add(countryIdLabel);
-        formPanel.add(countryIdField);
+        formPanel.add(countryComboBox);
         formPanel.add(submitButton);
         formPanel.add(backButton);
-    
+
         // Añadir márgenes alrededor del formulario
         JPanel marginPanel = new JPanel(new BorderLayout());
         marginPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20)); // Márgenes laterales
         marginPanel.add(formPanel, BorderLayout.CENTER);
-    
+
         panel.add(marginPanel, BorderLayout.CENTER);
-    
+
         submitButton.addActionListener(e -> {
             String id = idField.getText().trim();
             String name = nameField.getText().trim();
-            String countryId = countryIdField.getText().trim();
-    
+            String selectedCountry = (String) countryComboBox.getSelectedItem();
+
             // Validar si los campos están vacíos
-            if (id.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "City id cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+            if (id.isEmpty() || name.isEmpty() || selectedCountry == null) {
+                JOptionPane.showMessageDialog(this, "Please complete all fields.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-    
-            if (name.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "City name cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+
+            if ("Select".equals(selectedCountry)) {
+                JOptionPane.showMessageDialog(this, "Please select a country.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-    
-            if (countryId.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Country Id cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-    
+
             // Crear nuevo City
             City city = new City();
             city.setId(id);
             city.setName(name);
-            city.setCountryId(countryId);
-    
+            city.setCountryId(selectedCountry);
+
             // Ejecutar caso de uso
             createCityUC.execute(city);
-    
-            // Mostrar mensaje de éxito
             JOptionPane.showMessageDialog(this, "City added successfully.");
-    
+
             // Limpiar los campos de texto
             nameField.setText("");
             idField.setText("");
-            countryIdField.setText("");
+            countryComboBox.setSelectedIndex(0);
         });
-    
+
         backButton.addActionListener(e -> cardLayout.show(mainPanel, "Menu"));
-    
+
         return panel;
+    }
+
+    private void loadCountriesIntoComboBox() {
+        countryComboBox.removeAllItems(); // Limpiar el ComboBox antes de cargar los países
+        countryComboBox.addItem("Select"); 
+
+        // Obtener la lista de todos los países (caso de uso)
+        List<Country> countries = findAllCountryUC.execute();
+        countries.forEach(country -> {
+            countryComboBox.addItem(country.getName()); // Cargar nombres de los países en el ComboBox
+        });
     }
 
     private JPanel createSearchPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-    
+
         JPanel formPanel = new JPanel(new GridLayout(6, 1, 10, 10));
-    
+
         JLabel idLabel = new JLabel("Enter City ID:");
         JTextField idField = new JTextField(10);
         JButton submitButton = createRoundedButton("Search");
         JButton backButton = createRoundedButton("Back");
-    
+
         formPanel.add(idLabel);
         formPanel.add(idField);
         formPanel.add(submitButton);
         formPanel.add(backButton);
-    
+
         // Añadir márgenes alrededor del formulario
         JPanel marginPanel = new JPanel(new BorderLayout());
         marginPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20)); // Márgenes laterales
         marginPanel.add(formPanel, BorderLayout.CENTER);
-    
+
         panel.add(marginPanel, BorderLayout.CENTER);
-    
+
         submitButton.addActionListener(e -> {
             String id = idField.getText().trim();
-    
+
             // Validar si el campo está vacío
             if (id.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "City ID cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-    
+
             try {
                 findCityUC.execute(id).ifPresentOrElse(
                         city -> showCityDetails(city),
-                        () -> JOptionPane.showMessageDialog(this, "City not found.", "Error", JOptionPane.ERROR_MESSAGE)
-                );
+                        () -> JOptionPane.showMessageDialog(this, "City not found.", "Error",
+                                JOptionPane.ERROR_MESSAGE));
                 idField.setText(""); // Limpiar el campo de texto
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Invalid input. Please enter a valid ID.", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Invalid input. Please enter a valid ID.", "Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
         });
-    
+
         backButton.addActionListener(e -> cardLayout.show(mainPanel, "Menu"));
-    
+
         return panel;
     }
 
@@ -318,12 +341,11 @@ public class CityAdapter extends JFrame {
         panel.add(headerPanel, BorderLayout.NORTH);
         panel.add(scrollPane, BorderLayout.CENTER);
 
-
         JButton searchButton = createRoundedButton("Search");
         searchButton.addActionListener(e -> {
             // Limpiar el modelo de la tabla antes de agregar nuevos datos
             tableModel.setRowCount(0);
-    
+
             // Obtiene todos los productos y los añade a la tabla
             findAllCityUC.execute().forEach(City -> {
                 Object[] row = { City.getId(), City.getName(), City.getCountryId() };
@@ -349,9 +371,9 @@ public class CityAdapter extends JFrame {
 
     private JPanel createUpdatePanel() {
         JPanel panel = new JPanel(new BorderLayout());
-    
+
         JPanel formPanel = new JPanel(new GridLayout(6, 1, 10, 10));
-    
+
         JLabel idLabel = new JLabel("Enter ID:");
         JTextField idField = new JTextField(20);
         JLabel nameLabel = new JLabel("Enter new name:");
@@ -360,7 +382,7 @@ public class CityAdapter extends JFrame {
         JTextField countryIdField = new JTextField(20);
         JButton submitButton = createRoundedButton("Update");
         JButton backButton = createRoundedButton("Back");
-    
+
         formPanel.add(idLabel);
         formPanel.add(idField);
         formPanel.add(nameLabel);
@@ -369,35 +391,35 @@ public class CityAdapter extends JFrame {
         formPanel.add(countryIdField);
         formPanel.add(submitButton);
         formPanel.add(backButton);
-    
+
         // Añadir márgenes alrededor del formulario
         JPanel marginPanel = new JPanel(new BorderLayout());
         marginPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20)); // Márgenes laterales
         marginPanel.add(formPanel, BorderLayout.CENTER);
-    
+
         panel.add(marginPanel, BorderLayout.CENTER);
-    
+
         submitButton.addActionListener(e -> {
             String id = idField.getText().trim();
             String name = nameField.getText().trim();
             String countryId = countryIdField.getText().trim();
-    
+
             // Validar si los campos están vacíos
             if (id.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "City ID cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            
+
             if (name.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "City name cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-    
+
             if (countryId.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Country Id cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-    
+
             try {
                 findCityUC.execute(id).ifPresentOrElse(
                         city -> {
@@ -409,49 +431,50 @@ public class CityAdapter extends JFrame {
                             nameField.setText("");
                             countryIdField.setText("");
                         },
-                        () -> JOptionPane.showMessageDialog(this, "City not found.", "Error", JOptionPane.ERROR_MESSAGE)
-                );
+                        () -> JOptionPane.showMessageDialog(this, "City not found.", "Error",
+                                JOptionPane.ERROR_MESSAGE));
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Invalid input. Please enter a valid integer.", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Invalid input. Please enter a valid integer.", "Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
         });
-    
+
         backButton.addActionListener(e -> cardLayout.show(mainPanel, "Menu"));
-    
+
         return panel;
     }
 
     private JPanel createDeletePanel() {
         JPanel panel = new JPanel(new BorderLayout());
-    
+
         JPanel formPanel = new JPanel(new GridLayout(4, 1, 10, 10));
-    
+
         JLabel idLabel = new JLabel("Enter City ID:");
         JTextField idField = new JTextField(20);
         JButton submitButton = createRoundedButton("Delete");
         JButton backButton = createRoundedButton("Back");
-    
+
         formPanel.add(idLabel);
         formPanel.add(idField);
         formPanel.add(submitButton);
         formPanel.add(backButton);
-    
+
         // Añadir márgenes alrededor del formulario
         JPanel marginPanel = new JPanel(new BorderLayout());
         marginPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20)); // Márgenes laterales
         marginPanel.add(formPanel, BorderLayout.CENTER);
-    
+
         panel.add(marginPanel, BorderLayout.CENTER);
-    
+
         submitButton.addActionListener(e -> {
             String id = idField.getText().trim();
-    
+
             // Validar si el campo está vacío
             if (id.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "City ID cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-    
+
             try {
                 int confirmation = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this City?",
                         "Confirm Deletion", JOptionPane.YES_NO_OPTION);
@@ -461,12 +484,13 @@ public class CityAdapter extends JFrame {
                     idField.setText("");
                 }
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Invalid input. Please enter a valid integer.", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Invalid input. Please enter a valid integer.", "Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
         });
-    
+
         backButton.addActionListener(e -> cardLayout.show(mainPanel, "Menu"));
-    
+
         return panel;
     }
 
