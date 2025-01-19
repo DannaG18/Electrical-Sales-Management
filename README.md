@@ -98,7 +98,7 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 ## Contact
 For any inquiries or support, please contact:
-- **Name**: [Your Name]
-- **Email**: [Your Email]
-- **LinkedIn**: [Your LinkedIn Profile]
+- **Name**: Danna Alvarez
+- **Email**: dg.alvarezr@gmail.com
+- **LinkedIn**: [in/danna-alvarez-9794611a5](in/danna-alvarez-9794611a5)"Danna's LinkedIn"
 
