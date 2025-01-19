@@ -100,4 +100,4 @@ This project is licensed under the MIT License. See the LICENSE file for details
 For any inquiries or support, please contact:
 - **Name**: Danna Alvarez
 - **Email**: dg.alvarezr@gmail.com
-- **LinkedIn**: [in/danna-alvarez-9794611a5](in/danna-alvarez-9794611a5)"Danna's LinkedIn"
+- **LinkedIn**: [in/danna-alvarez-9794611a5](in/danna-alvarez-9794611a5)
